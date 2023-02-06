@@ -104,6 +104,78 @@ const styles = StyleSheet.create({
       },
 })
 
+export const DisableButton = props => {
+  const {
+    title,
+    bgColor,
+    txtcolor,
+    marginHorizontal,
+    onPress,
+    loader,
+    borderRadius,
+    height,
+    fontSize,
+  } = props;
+  return (
+    <Pressable
+      activeOpacity={0.8}
+      onPress={onPress}
+      disabled={true}
+      style={[
+        btnstyles.facebookButton,
+        {
+          height: height ? height : 48,
+          backgroundColor: bgColor ? bgColor : '#FB802A',
+          borderRadius: borderRadius? borderRadius: 32,
+          marginHorizontal: marginHorizontal ? marginHorizontal : 15,
+        },
+      ]}>
+        {loader ?
+        <View disabled style={{ height: 24, justifyContent: 'center', alignItems: 'center', }}>
+          <ActivityIndicator color={'#fff'} size={'small'} />
+        </View>
+        :
+      <Text
+        style={[
+          btnstyles.facebooktext,
+          {
+            fontSize: fontSize ? fontSize : 16,
+            color: txtcolor ? txtcolor : 'white',
+            fontFamily: 'Poppins',
+          },
+        ]}>
+        {title}
+      </Text>}
+    </Pressable>
+  );
+};
+
+const btnstyles = StyleSheet.create({
+  facebookButton: {     
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#FB802A',
+    borderWidth: 0,
+  },
+  facebooktext: {
+    fontFamily: 'Muli-Bold',
+    fontWeight: '700',
+    alignSelf: 'center',
+  },
+  facebookButton1: {
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#FB802A',
+    borderWidth: 1,
+  },
+  facebooktext1: {
+    fontFamily: 'Muli-Bold',
+    fontWeight: '700',
+    alignSelf: 'center',
+  },
+});
+
 export const LoginButton = props => {
     const {
       title,

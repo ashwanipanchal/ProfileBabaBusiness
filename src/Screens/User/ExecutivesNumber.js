@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, SafeAreaView, StatusBar, TouchableOpacity, Image, ScrollView, Linking, Dimensions } from 'react-native'
-import React from 'react'
+import React,{useEffect} from 'react'
 import { useLayoutEffect } from 'react'
 import { Api } from '../../services/Api'
 import { FlatList } from 'react-native-gesture-handler'
@@ -7,7 +7,23 @@ import { useState } from 'react'
 import { COLORS } from '../../Constant/Colors'
 import Loader from '../../services/Loader'
 const {width, height} = Dimensions.get('screen')
+import NetInfo, {useNetInfo} from "@react-native-community/netinfo";
+
 const ExecutivesNumber = ({ navigation }) => {
+    useEffect(()=>{
+        const unsubscribe = NetInfo.addEventListener(state => {
+          // alert(JSON.stringify(state,null,2))
+          if(!state.isConnected){
+            // Alert.alert('No Connection', 'Please check your internet connection and Try Again')
+            // check()
+          }else{
+            getContacts()
+          }
+        });
+        return (
+          () => unsubscribe()
+        )
+      },[])
     const [numbers, setNumbers] = useState([])
     const [loading, setLoading] = useState(false)
     useLayoutEffect(()=>{
@@ -33,19 +49,22 @@ const ExecutivesNumber = ({ navigation }) => {
                     <Image source={require('../../images/arrowback.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems:'center'}}>
-                    <Text style={{ color: '#4285F4', fontFamily: 'Poppins-SemiBold', fontSize: 22, marginLeft: 20, fontWeight: '600' }}>Executive </Text>
+                    <Text style={{ color: '#4285F4', fontFamily: 'Poppins-SemiBold', fontSize: 22, marginLeft: 10, fontWeight: '600' }}>Executive </Text>
                     <Text style={{ color: '#FB802A', fontFamily: 'Poppins-SemiBold', fontSize: 22, fontWeight: '600' }}>Numbers</Text>
                 </View>
             </View>
-            <Image style={{width:300,height:300, resizeMode:'contain', alignSelf:'center', marginBottom:20,}} source={require('../../images/contactus.jpg')}/>
+            <Image style={{width:300,height:300, resizeMode:'contain', alignSelf:'center', marginBottom:20,}} source={require('../../images/contactus1.jpg')}/>
             <ScrollView>
                     <FlatList
                         data={numbers}
                         renderItem={({item, index})=> (
                             <View style={{backgroundColor:'#FFF', flexDirection:'row', alignItems:'center', justifyContent:'space-between',marginBottom:10, marginHorizontal:20, borderRadius:10, paddingHorizontal:10, height:56}}>
-                                <Text style={{color:COLORS.lightBlack, fontSize:18}}>{item.contact_number}</Text>
+                                <Text style={{color:COLORS.lightBlack, fontSize:18, flex:1}}>{item.contact_number}</Text>
                                 <TouchableOpacity onPress={()=> Linking.openURL(`tel:${numbers[index].contact_number}`)}>
                                     <Image style={{height:32, width:32, resizeMode:'contain', }} source={require('../../images/call.png')}/>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={()=> Linking.openURL(`sms:${numbers[index].contact_number}`)}>
+                                    <Image style={{height:32, width:32, resizeMode:'contain', marginLeft:20 }} source={require('../../images/modalmail.png')}/>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -64,7 +83,7 @@ const styles = StyleSheet.create({
         padding: 5,
         // backgroundColor:'red'
         padding: 5,
-        backgroundColor: '#FFF',
+        // backgroundColor: '#FFF',
         borderRadius: 10
     },
 })

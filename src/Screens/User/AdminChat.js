@@ -18,11 +18,15 @@ const AdminChat = ({navigation}) => {
 
     let flatList = useRef(null);
     useEffect(()=>{
+
+      const interval = setInterval(()=>{
         getAdminChat()
+      },3000)
+      return () => clearInterval(interval)
         // setTimeout(() => {
         //   chats.scrollToEnd()
         // }, 50);
-      },[])
+      },[getAdminChat])
 
       const getAdminChat = async () => {
         const user = (await LocalStorage.getUserDetail() || '')
@@ -41,6 +45,7 @@ const AdminChat = ({navigation}) => {
           }
         })
         const res = await response.json()
+        // alert(JSON.stringify(res,null,2))
         const newDate = res.data[0].history.map((i)=>{
           let date = moment(i.created_at).format('DD/MMM/yyyy')
           let time = moment(i.created_at).format('h:mm a');
@@ -55,26 +60,49 @@ const AdminChat = ({navigation}) => {
         
       }
 
-      const sendChatToAdmin = async() => {
-        if(!EachMessages){
+      // const sendChatToAdmin = async() => {
+      //   if(!EachMessages){
+      //     Toast.show("Write your message")
+      //     return
+      //   }
+      //   const body = {
+      //     "user_id":userID,
+      //     "message":EachMessages
+      //    }
+      //    //  return
+      //    const response = await Api.sendchattoadmin(body)
+      //   //  alert(response,null,2)
+      //   const monthlyTimeSeries = Object.values(response["Success"]);
+      //   const result = monthlyTimeSeries[1];
+      //   console.log(result)
+      //   setEachMessages('')
+      //   const {success} = response
+      //   if(success){
+      //     getAdminChat()
+      //   }else{
+      //     Toast.show("Network Issue")
+      //   }
+      // }
+
+      const sendChatToAdmin = async () => {
+        if (!EachMessages) {
           Toast.show("Write your message")
           return
         }
         const body = {
-          "user_id":userID,
-          "message":EachMessages
-         }
-         //  return
-         const response = await Api.sendchattoadmin(body)
-        //  alert(JSON.stringify(response,null,2))
+          "user_id": userID,
+          "message": EachMessages
+        }
+        //  alert(JSON.stringify(body,null,2))
+        //  return
         setEachMessages('')
-        const {success} = response
-        if(success){
+        const response = await Api.sendchattoadmin(body)
+        const { success } = response
+        if (success) {
           getAdminChat()
-        }else{
-          Toast.show("Network Issue")
         }
       }
+
       function groupedDays(messages) {
         return messages.reduce((acc, el, i) => {
           const messageDay = moment(el.created_at).format('DD-MMM-YYYY');
@@ -104,11 +132,11 @@ const AdminChat = ({navigation}) => {
               <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
                   <Image source={require('../../images/arrowback.png')} style={{ width: 30, height: 30, resizeMode: 'contain'  }} />
               </TouchableOpacity>
-              <View style={{flexDirection:'row', marginLeft:10}}>
-                <Image style={{ width: 48, height: 48 }} source={require('../../images/executive.png')} />
-                <View>
-                  <Text style={{ color: COLORS.profileBlackText }}>Mr. Kristin Watson</Text>
-                  <Text style={{ color: COLORS.lightGray }}>Profile Baba Executive</Text>
+              <View style={{flexDirection:'row',  alignItems:'center'}}>
+                <Image style={{ width: 48, height: 48, resizeMode:'contain',marginHorizontal:5 }} source={require('../../images/logo.png')} />
+                <View style={{alignItems:'center'}}>
+                  <Text style={{ color: COLORS.profileBlackText, textAlign:'center', fontSize:16}}>Profile Baba Executive</Text>
+                  {/* <Text style={{ color: COLORS.lightGray }}>Profile Baba Executive</Text> */}
                 </View>
                 {/* <TouchableOpacity onPress={()=> {flatList.current.scrollToEnd({ animated: true })}}>  
                   <Text style={{color:'black'}}>Bottom</Text>
@@ -142,16 +170,25 @@ const AdminChat = ({navigation}) => {
                           {item.sender === 'user'?
                         (
                         <View style={{fontFamily:'Poppins', alignItems:'flex-end',}}>
-                            <Text style={{color:'white',  backgroundColor:COLORS.blue, paddingHorizontal:20, paddingVertical:10, marginHorizontal:10, marginVertical:5, borderRadius:10}}>{item.message}</Text>
+                            <Text style={{color:'white',  backgroundColor:COLORS.blue, paddingHorizontal:20, paddingVertical:10, marginHorizontal:10, marginVertical:5, borderRadius:20, borderBottomRightRadius:0}}>{item.message}</Text>
                             <Text style={{color:'gray',marginHorizontal:10, fontSize:10}}>{item.time}</Text>
                         </View>
                         ) :
                         (
-                        <View style={{fontFamily:'Poppins', alignSelf:'flex-start',}}>
-                            <Text style={{color:'black',  backgroundColor:'lightgray', paddingHorizontal:20, paddingVertical:10, margin:10, borderRadius:10}}>{item.message}</Text>
-                            <Text style={{color:'gray',marginHorizontal:10, fontSize:10}}>{item.time}</Text>
-                        </View>
-                        )
+                          <View style={{ fontFamily: 'Poppins', alignSelf: 'flex-start', }}>
+                              {item.message == 'Share Vendor' ?
+                                  // <TouchableOpacity>
+                                  <Text onPress={() => {
+                                    // refRBSheet2.current.close()
+                                    navigation.navigate('ExtraVendorList', item)
+                                  }} style={{ color: 'white', backgroundColor: COLORS.orange, paddingHorizontal: 15, paddingVertical: 10, margin: 10, borderRadius: 15, borderTopLeftRadius:0, textDecorationLine: 'underline' }}>Avalible Vendor List</Text>
+                                  // </TouchableOpacity>
+                                  :
+                                  <Text style={{ color: 'black', backgroundColor: '#DCDCDC', paddingHorizontal: 15, paddingVertical: 10, margin: 10, borderRadius: 15, borderTopLeftRadius:0, }}>{item.message}</Text>
+                              }
+                              <Text style={{ color: 'gray', marginHorizontal: 10, fontSize: 10 }}>{item.time}</Text>
+                          </View>
+                      )
                     } 
                       </View>}
                      
@@ -169,7 +206,9 @@ const AdminChat = ({navigation}) => {
             <TouchableOpacity onPress={()=>sendChatToAdmin()}>
               <Image source={require('../../images/sendorange.png')} style={{ width: 48, height: 48, marginRight:10 }} />
             </TouchableOpacity>
-        </View>  
+        </View> 
+        
+         
     </View>
   )
 }
@@ -184,7 +223,7 @@ const styles = StyleSheet.create({
         // height:20,
         // backgroundColor:'red'
         padding: 5,
-        backgroundColor:'#FFF',
+        // backgroundColor:'#FFF',
         borderRadius:10
       },
       textInput: {

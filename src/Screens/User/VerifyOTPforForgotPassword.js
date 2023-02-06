@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, StatusBar } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, StatusBar, SafeAreaView } from 'react-native'
 import React,{useEffect, useState} from 'react'
 import { StatusBarDark } from '../../Custom/CustomStatusBar'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
-import { ButtonStyle } from '../../Custom/CustomView';
+import { ButtonStyle, DisableButton } from '../../Custom/CustomView';
 import { Api } from '../../services/Api';
 import Toast from 'react-native-simple-toast';
 
@@ -11,6 +11,7 @@ const VerifyOTPforForgotPassword = ({navigation,route}) => {
     const [otp, setOtp] = useState('');
     const [veriryOtp, setVeriryOtp] = useState(route.params?.otp);
     const [seconds, setSeconds] = useState(STATIC_TIME);
+    const [clicked, setClicked] = useState(false)
     const [state, setState] = useState({
       isLoading: false
     })
@@ -48,10 +49,9 @@ const VerifyOTPforForgotPassword = ({navigation,route}) => {
         Toast.show('Please enter valid OTP');
         return;
       }
-      setState({ ...state, isLoading: true });
-      setState({ ...state, isLoading: false });
+      setClicked(true)
       navigation.replace('CreatePassword',route.params)
-
+      setClicked(false)
       // const body = {
       //   contact_number: route.params?.mobile,
       //   otp: otp,
@@ -84,8 +84,8 @@ const VerifyOTPforForgotPassword = ({navigation,route}) => {
       }
     }
   return (
-    <View style={{flex:1, backgroundColor:'#fff'}}>
-      <StatusBarDark/>
+    <SafeAreaView style={{flex:1, backgroundColor:'#fff'}}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
         <Image source={require('../../images/arrowback.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
       </TouchableOpacity>
@@ -114,19 +114,24 @@ const VerifyOTPforForgotPassword = ({navigation,route}) => {
         <TouchableOpacity onPress={()=>{resendOTPHandler()}}><Text style={{color:'#FB802A'}}> Resend OTP</Text></TouchableOpacity>
         </View>
         <View style={{flexDirection:'column',alignItems:'center', justifyContent:'space-between', marginTop:50 }}>
-          <View style={{width: '90%' }}>
+        {clicked ?
+            <DisableButton
+            title={'Verify'}
+            bgColor={COLORS.orange}
+          />:
+        <View style={{width: '90%' }}>
             <ButtonStyle
             title={'Verify'}
             loader={state.isLoading}
             onPress={() => {
               verify()
-              // navigation.navigate('CreatePassword');
             }}
             />
         </View>
+        }
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -134,7 +139,7 @@ export default VerifyOTPforForgotPassword
 
 const styles = StyleSheet.create({
     crossImage: {
-        marginTop: StatusBar.currentHeight,
+        marginTop: 0,
         marginLeft: 20,
         width: '10%',
         padding: 5,
@@ -145,26 +150,26 @@ const styles = StyleSheet.create({
         marginTop:50,
         // width:'80%',
         marginVertical: 20,
-        marginHorizontal: 10
+        marginHorizontal: 24
       },
       underlineStyleBase: {
-        width: 50, //60
-        height: 50, //60
+        width: 50,
+        height: 50,
         borderWidth: 1,
         borderColor: 'lightgrey',
         backgroundColor: '#fff',
         borderRadius: 10,
         fontFamily: 'Poppins-SemiBold',
-        fontSize: 16, //22
+        fontSize: 18,
         fontWeight: '500',
         color: '#100C08',
       },
       underlineStyleHighLighted: {
-        width: 50, //60
-        height: 50, //60
+        width: 50,
+        height: 50,
         borderRadius: 10,
         fontFamily: 'Poppins',
-        fontSize: 16, //24
+        fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
         backgroundColor: '#fff',

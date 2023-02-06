@@ -16,28 +16,45 @@ import { LocalStorage } from '../../services/Api';
 import { _RemoveAuthToken } from '../../services/ApiSauce';
 import { useIsFocused } from '@react-navigation/native';
 import { BASE_URL } from '../../services/Config'
+import { TabActions } from '@react-navigation/native';
+import NetInfo, {useNetInfo} from "@react-native-community/netinfo";
+
 const CustomDrawer = ({ navigation, route}) => {
+  useEffect(()=>{
+    const unsubscribe = NetInfo.addEventListener(state => {
+      // alert(JSON.stringify(state,null,2))
+      if(!state.isConnected){
+        // Alert.alert('No Connection', 'Please check your internet connection and Try Again')
+        // check()
+      }else{
+        profileName()
+      }
+    });
+    return (
+      () => unsubscribe()
+    )
+  },[])
   const isFocus = useIsFocused()
   const [user, setUser] = useState()
   const [privacyTermsCondition, setPrivacyTermsCondition] = useState("");
   const Data = [
     {
       id: 0,
-      title: 'Home',
-      value: 'Home',
-      source: require('../../images/homeIcon.png'),
+      title: 'Leads',
+      value: 'Leads',
+      source: require('../../images/menulead.png'),
     },
     {
       id: 1,
-      title: 'Leads',
-      value: 'Leads',
-      source: require('../../images/menulead.png')
+      title: 'Chats',
+      value: 'Chats',
+      source: require('../../images/menuchat.png')
     },
     {
       id: 2,
       title: 'Offers',
       value: 'Offers',
-      source: require('../../images/menuoffer.png')
+      source: require('../../images/Vector.png')
     },
     {
       id: 3,
@@ -149,18 +166,35 @@ const CustomDrawer = ({ navigation, route}) => {
 
     switch (value) {
       
-      case 'Home':
-        navigation.navigate('TabNavigator')
+      case 'Chats':
+        navigation.dispatch(TabActions.jumpTo('Chats'))
+        navigation.closeDrawer();
         break;
       case 'Leads':
-        navigation.navigate('TabNavigator')
+        navigation.dispatch(TabActions.jumpTo('Leads'))
+        navigation.closeDrawer(); 
         break;
       case 'Offers':
-        navigation.navigate('TabNavigator')
+        navigation.dispatch(TabActions.jumpTo('Offers'))
+        navigation.closeDrawer();
         break;
-
       case 'Account':
         navigation.navigate('AccountProfile')
+        break;
+      case 'Customer Care':
+        navigation.navigate('ExecutivesNumber')
+        break;
+      case 'Terms & Condition':
+        gotoWebViewScreen('Terms & Condition')
+        break;
+      case 'Privacy Policy':
+        gotoWebViewScreen('Privacy Policy')
+        break;
+      case 'Help & FAQs':
+        gotoWebViewScreen('Help & FAQs')
+        break;
+      case 'Contact Us':
+        navigation.navigate('ExecutivesNumber')
         break;
 
       case 'Booking History':
@@ -206,11 +240,11 @@ const CustomDrawer = ({ navigation, route}) => {
   const gotoWebViewScreen = (title) => {
     let url = "";
     if (title === "Privacy Policy") {
-      url = privacyTermsCondition.private_police
+      url = 'https://profilebaba.com/privacy-policy'
     } else if (title === "Terms & Condition") {
-      url = privacyTermsCondition.terms_conditions
-    }else if (title === "About Us") {
-      url = privacyTermsCondition.about_us
+      url = 'https://profilebaba.com/terms-conditions'
+    }else if (title === "Help & FAQs") {
+      url = 'https://profilebaba.com/faq'
     }
     navigation.navigate('WebViewScreen', {
       title: title,
@@ -222,8 +256,8 @@ const CustomDrawer = ({ navigation, route}) => {
     try {
       const result = await Share.share({
         title: 'App link',
-        message: 'Please install this app and stay safe , AppLink :https://play.google.com/store/apps/details?id=nic.goi.aarogyasetu&hl=en',
-        url: 'https://play.google.com/store/apps/details?id=nic.goi.aarogyasetu&hl=en'
+        message: 'Please install this app and stay safe , AppLink :https://play.google.com/store/apps/details?id=com.profilebababusiness',
+        url: 'https://play.google.com/store/apps/details?id=com.profilebababusiness'
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -242,49 +276,48 @@ const CustomDrawer = ({ navigation, route}) => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <DrawerContentScrollView>
-        <View style={{flexDirection:'row', padding:10, alignItems:'center', marginLeft:5, marginBottom:2}}>
+        <TouchableOpacity onPress={()=>navigation.navigate('AccountProfile')} style={{flexDirection:'row', padding:10, alignItems:'center', marginLeft:5, marginBottom:2,}}>
             {(user && 
             <>
               <Image source={user.profile_pic.length > 0 ? {uri: `http://testing.profilebaba.com/uploads/users/${user.profile_pic}`} : require('../../images/default-user-image.png')} style={{ width: 60, height: 60, borderRadius: 10 }} />
-              <View style={{ marginLeft: 10, }}>
+              <View style={{ marginLeft: 10,width:'100%' }}>
                 <Text style={{ color: '#222133', fontSize: 20, fontWeight: '800' }}>{user.name}</Text>
                 <Text style={{ color: '#7C7C7A' }}>{user.email}</Text>
               </View>
             </>
             )}
-        </View>
+        </TouchableOpacity>
         <FlatList
           data={Data}
           style={{}}
           renderItem={({item})=>(
-            <TouchableOpacity onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:18, alignItems:'center'}}>
-              <Image source={item.source} style={{width:28, height:28}}/>
+            <TouchableOpacity activeOpacity={0.9} onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:14, alignItems:'center', }}>
+              <Image source={item.source} style={{width:27, height:27}}/>
               <Text style={{color:COLORS.lightGray, fontFamily:'Poppins-Medium', fontSize:18, marginLeft:20}}>{item.title}</Text>
             </TouchableOpacity>
           )}
         />
-        <Text style={{color:COLORS.profileBlackText, fontFamily:'Poopins-Medium', fontSize:20, marginLeft:20, padding:10}}>Application Preferences</Text>
+        <Text style={{color:COLORS.profileBlackText, fontFamily:'Poopins-Medium', fontSize:18, marginLeft:15, padding:10}}>Application Preferences</Text>
         <FlatList
           data={Data1}
           renderItem={({item})=>(
-            <TouchableOpacity onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:18, alignItems:'center'}}>
+            <TouchableOpacity activeOpacity={0.9} onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:14, alignItems:'center'}}>
               <Image source={item.source} style={{width:28, height:28}}/>
               <Text style={{color:COLORS.lightGray, fontFamily:'Poppins-Medium', fontSize:18, marginLeft:20}}>{item.title}</Text>
             </TouchableOpacity>
           )}
         />
-        <Text style={{color:COLORS.profileBlackText, fontFamily:'Poopins-Medium', fontSize:20, marginLeft:20, padding:10}}>Help & Privacy</Text>
+        <Text style={{color:COLORS.profileBlackText, fontFamily:'Poopins-Medium', fontSize:18, marginLeft:15, padding:10}}>Help & Privacy</Text>
         <FlatList
           data={Data2}
           renderItem={({item})=>(
-            <TouchableOpacity onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:18, alignItems:'center'}}>
+            <TouchableOpacity activeOpacity={0.9} onPress={()=>{onPressHandler(item.title)}} style={{flexDirection:'row', marginLeft:10, padding:14, alignItems:'center'}}>
               <Image source={item.source} style={{width:28, height:28}}/>
               {item.title == 'Logout' ?
               <Text style={{color:'red', fontFamily:'Poppins-Medium', fontSize:18, marginLeft:20}}>{item.title}</Text>
               :
               <Text style={{color:COLORS.lightGray, fontFamily:'Poppins-Medium', fontSize:18, marginLeft:20}}>{item.title}</Text>
               }
-              
             </TouchableOpacity>
           )}
         />

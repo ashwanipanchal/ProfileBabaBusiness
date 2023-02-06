@@ -11,11 +11,13 @@ import Chats from '../Screens/User/Chats';
 // import Profile from '../Screens/Profile';
 
 const iconPath = {
+  m: require('../images/menuhome.png'),
+  ma: require('../images/menuhomeactive.png'),
   h: require('../images/menuchat.png'),
   ha: require('../images/menuchatactive.png'),
   s: require('../images/menulead.png'),
   sa: require('../images/menuleadactive.png'),
-  f: require('../images/menuoffer.png'),
+  f: require('../images/Vector.png'),
   fa: require('../images/menuofferactive.png'),
   a: require('../images/menuaccount.png'),
   Aa: require('../images/menuaccountactive.png'),
@@ -27,7 +29,7 @@ const TabIcon = source => <Image source={source} style={styles.tabIcon} />;
 const TabNavigator = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Chats"
+      initialRouteName="Leads"
       tabBarOptions={{
         keyboardHidesTabBar: true,
         labelStyle: {
@@ -47,16 +49,16 @@ const TabNavigator = () => {
           right: 0,
         }
       }}>
-      <Tab.Screen
-        name="Chats"
-        component={Chats}
+        {/* <Tab.Screen
+        name="Home"
+        component={Home}
         options={{
-          tabBarLabel: 'Chats',
+          tabBarLabel: 'Home',
           tabBarIcon: ({focused}) =>
-            TabIcon(focused ? iconPath.ha : iconPath.h),
+            TabIcon(focused ? iconPath.ma : iconPath.m),
           headerShown: false,
         }}
-      />
+      /> */}
 
       <Tab.Screen
         name="Leads"
@@ -68,6 +70,18 @@ const TabNavigator = () => {
           headerShown: false,
         }}
       />
+
+      <Tab.Screen
+        name="Chats"
+        component={Chats}
+        options={{
+          tabBarLabel: 'Chats',
+          tabBarIcon: ({focused}) =>
+            TabIcon(focused ? iconPath.ha : iconPath.h),
+          headerShown: false,
+        }}
+      />
+
 
       <Tab.Screen
         name="Offers"

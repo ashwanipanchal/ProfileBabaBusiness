@@ -36,6 +36,12 @@ import ThisWeekLeads from '../Screens/User/ThisWeekLeads';
 import PaymentSuccess from '../Screens/User/PaymentSuccess';
 import TabNavigatorTest from './TabNavigatorTest';
 import ExecutivesNumber from '../Screens/User/ExecutivesNumber';
+import UploadProfilePicture from '../Screens/User/UploadProfilePicture';
+import WebViewScreen from '../Screens/User/WebViewScreen';
+import ExtraVendorList from '../Screens/User/ExtraVendorList';
+import TempScreen from '../Screens/User/TempScreen';
+import Login1 from '../Screens/User/Login1';
+import FilterLeads from '../Screens/User/FilterLeads';
 
 
 const Stack = createStackNavigator();
@@ -51,6 +57,15 @@ const StackNavigator = () => {
         // headerShown: false,
         ...TransitionPresets.SlideFromRightIOS,
     };
+
+    // const linking = {
+    //     prefixes: ['https://mychat.com', 'mychat://'],
+    //     config: {
+    //       screens: {
+    //         Home: 'feed/:sort',
+    //       },
+    //     },
+    //   };
 
     const navigationRef = useRef();
     return (
@@ -86,6 +101,11 @@ const StackNavigator = () => {
                 <Stack.Screen
                     name="Login"
                     component={Login}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="Login1"
+                    component={Login1}
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
@@ -139,6 +159,11 @@ const StackNavigator = () => {
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                    name="FilterLeads"
+                    component={FilterLeads}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
                     name="AllLeads"
                     component={AllLeads}
                     options={{ headerShown: false }}
@@ -179,6 +204,16 @@ const StackNavigator = () => {
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                    name="WebViewScreen"
+                    component={WebViewScreen}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="UploadProfilePicture"
+                    component={UploadProfilePicture}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
                     name="Account"
                     component={Account}
                     options={{ headerShown: false }}
@@ -189,8 +224,18 @@ const StackNavigator = () => {
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                    name="TempScreen"
+                    component={TempScreen}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
                     name="VendorList"
                     component={VendorList}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="ExtraVendorList"
+                    component={ExtraVendorList}
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen

@@ -26,7 +26,12 @@ const PaymentSuccess = ({navigation,route}) => {
   return (
     <View style={{backgroundColor: '#2574FF', flex: 1}}>
       <StatusBarDark  backgroundColor={'#2574FF'}/>
-      <TouchableOpacity onPress={() => {navigation.replace('DrawerNavigator')}}>
+      <TouchableOpacity onPress={() => {
+          navigation.reset({
+          index: 0,
+          routes: [{name : 'DrawerNavigator'}]
+        })
+      }}>
         <Image style={styles.image} source={require('../../images/check.png')} />
         <Text style={styles.text}>Ref Id: {route.params}</Text>
         <Text style={styles.subtext}>Payment Successful !</Text>

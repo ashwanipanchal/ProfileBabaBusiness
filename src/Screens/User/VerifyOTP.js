@@ -2,16 +2,19 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, StatusBar 
 import React,{useEffect, useState} from 'react'
 import { StatusBarDark } from '../../Custom/CustomStatusBar'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
-import { ButtonStyle } from '../../Custom/CustomView';
+import { ButtonStyle, DisableButton } from '../../Custom/CustomView';
 import Toast from 'react-native-simple-toast';
 import { Api,LocalStorage } from '../../services/Api';
 import { useDispatch } from 'react-redux';
 import { _SetAuthToken } from '../../services/ApiSauce';
+import { SafeAreaView } from 'react-native';
+import { COLORS } from '../../Constant/Colors';
 
 const STATIC_TIME = 60;
 const VerifyOTP = ({navigation, route}) => {
   const dispatch = useDispatch();
   const [otp, setOtp] = useState('');
+  const [clicked, setClicked] = useState(false)
   const [veriryOtp, setVeriryOtp] = useState(route.params?.otp);
   const [token, setToken] = useState(route.params?.token);
   const [seconds, setSeconds] = useState(STATIC_TIME);
@@ -30,7 +33,7 @@ const VerifyOTP = ({navigation, route}) => {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
-    }, [seconds]);
+    }, [seconds, resendOTPHandler]);
     useEffect(()=>{
       console.log(route.params)
     },[])
@@ -47,6 +50,7 @@ const VerifyOTP = ({navigation, route}) => {
         Toast.show('Please enter complete OTP');
         return;
       }
+      setClicked(true)
       setState({ ...state, isLoading: true });
       const body = {
         contact_number: route.params?.mobile,
@@ -56,15 +60,19 @@ const VerifyOTP = ({navigation, route}) => {
       const response = await Api.verifyOTP(body);
       const {success, message, data} = response;
       // alert(JSON.stringify(route.params,null,2))
-      setState({ ...state, isLoading: false });
+  
       if(success){
         Toast.show(message)
         // LocalStorage.setUserDetail(route.params.user_id.toString());
         // LocalStorage.setToken(route.params.token);
         // _SetAuthToken(route.params.token);
         navigation.replace('Login')
+        setClicked(false)
+        setState({ ...state, isLoading: false });
       }else{
         Toast.show("Wrong OTP")
+        setClicked(false)
+        setState({ ...state, isLoading: false });
         // navigation.replace('Register')
       }
     }
@@ -79,14 +87,15 @@ const VerifyOTP = ({navigation, route}) => {
       if(success){
         setVeriryOtp(data.otp)
         alert(data.otp)
+        setSeconds(60)
       }
     }
   return (
-    <View style={{flex:1, backgroundColor:'#fff'}}>
-      <StatusBarDark/>
-      <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
+    <SafeAreaView style={{flex:1, backgroundColor:'#fff'}}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      {/* <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
         <Image source={require('../../images/arrowback.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <ScrollView>
         <View style={{ flexDirection: 'row', marginTop: 40 }}>
             <Text style={{ color: '#4285F4', fontFamily: 'Poppins-SemiBold', fontSize: 28, marginLeft: 30, fontWeight: '600' }}>Verify </Text>
@@ -109,10 +118,14 @@ const VerifyOTP = ({navigation, route}) => {
           />
         <View style={{flexDirection:'row', justifyContent:'flex-end', marginRight:20}}>
         <Text style={{ fontWeight: '700', color: '#121212' }}> {countDown} </Text>
-        <TouchableOpacity onPress={()=>{resendOTPHandler()}}><Text style={{color:'#FB802A'}}> Resend OTP</Text></TouchableOpacity>
+        {countDown == "00:00" ?
+          <TouchableOpacity onPress={() => { resendOTPHandler() }}><Text style={{ color: '#FB802A' }}> Resend OTP</Text></TouchableOpacity>
+          :
+          <Text style={{color:'lightgray'}}> Resend OTP</Text>
+          }
         </View>
         <View style={{flexDirection:'column',alignItems:'center', justifyContent:'space-between', marginTop:50 }}>
-          <View style={{width: '90%' }}>
+          {/* <View style={{width: '90%' }}>
             <ButtonStyle
             title={'Verify'}
             loader={state.isLoading}
@@ -121,10 +134,28 @@ const VerifyOTP = ({navigation, route}) => {
               // navigation.replace('Home');
             }}
             />
+        </View> */}
+        {clicked ?
+        <View style={{width: '90%' }}>
+            <DisableButton
+            title={'Verify'}
+            loader={state.isLoading}
+            bgColor={COLORS.orange}
+          />
+          </View>:
+        <View style={{width: '90%' }}>
+            <ButtonStyle
+            title={'Verify'}
+            loader={state.isLoading}
+            onPress={() => {
+              verifyHandler()
+            }}
+            />
         </View>
+        }
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -132,7 +163,7 @@ export default VerifyOTP
 
 const styles = StyleSheet.create({
     crossImage: {
-        marginTop: StatusBar.currentHeight,
+        marginTop: 0,
         marginLeft: 20,
         width: '10%',
         padding: 5,
@@ -141,27 +172,28 @@ const styles = StyleSheet.create({
       otpInput: {
         height: 60,
         marginTop:50,
+        // width:'80%',
         marginVertical: 20,
-        marginHorizontal: 20,
+        marginHorizontal: 24
       },
       underlineStyleBase: {
-        width: 60,
-        height: 60,
+        width: 50,
+        height: 50,
         borderWidth: 1,
         borderColor: 'lightgrey',
         backgroundColor: '#fff',
         borderRadius: 10,
         fontFamily: 'Poppins-SemiBold',
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '500',
         color: '#100C08',
       },
       underlineStyleHighLighted: {
-        width: 60,
-        height: 60,
+        width: 50,
+        height: 50,
         borderRadius: 10,
         fontFamily: 'Poppins',
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
         backgroundColor: '#fff',

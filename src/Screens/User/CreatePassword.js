@@ -1,12 +1,13 @@
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, StatusBar } from 'react-native'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Image, StatusBar, SafeAreaView } from 'react-native'
 import React,{useEffect, useState} from 'react'
 import { NavigationActions } from '@react-navigation/native';
 import { StatusBarDark } from '../../Custom/CustomStatusBar'
-import { ButtonStyle } from '../../Custom/CustomView'
+import { ButtonStyle, DisableButton } from '../../Custom/CustomView'
 import Toast from 'react-native-simple-toast';
 import { Api } from '../../services/Api';
 
 const CreatePassword = ({navigation,route}) => {
+  const [clicked, setClicked] = useState(false)
   const [state, setState] = useState({
     password: '',
     confirm_password: '',
@@ -32,7 +33,7 @@ const CreatePassword = ({navigation,route}) => {
       Toast.show('Password and Confirm Password Should be Same');
       return;
     }
-
+    setClicked(true)
     const body = {
       otp:route.params.otp,
       contact_number:route.params.mobile,
@@ -43,22 +44,28 @@ const CreatePassword = ({navigation,route}) => {
     const response = await Api.createPassword(body);
     const {success, message, data}= response
     console.log(response)
-    setState({ ...state, isLoading: true });
     if(success){
       Toast.show(message)
       navigation.replace('Login')
+      setClicked(false)
+      setState({ ...state, isLoading: false });
     }else{
       Toast.show(data.data.error)
       navigation.replace('Register')
+      setClicked(false)
+      setState({ ...state, isLoading: false });
     }
   }
   return (
-    <View style={{flex:1, backgroundColor:'#fff'}}>
-      <StatusBarDark/>
+    <SafeAreaView style={{flex:1, backgroundColor:'#fff'}}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
         <Image source={require('../../images/Add.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
       </TouchableOpacity>
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1}}
+        keyboardShouldPersistTaps='handled'
+      >
       <View>
           <View style={{ flexDirection: 'row', marginTop: 40 }}>
             <Text style={{ color: '#4285F4', fontFamily: 'Poppins-SemiBold', fontSize: 28, marginLeft: 30, fontWeight: '600' }}>Create </Text>
@@ -89,9 +96,9 @@ const CreatePassword = ({navigation,route}) => {
           />
           </View>
           <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: 170, marginTop: 30 }}>
-          <View style={{ width: '90%',  }}>
+          {/* <View style={{ width: '90%',  }}>
             <ButtonStyle
-              title={'Create'}
+              title={'Verify'}
               bgColor={'#4285F4'}
               loader={state.isLoading}
               onPress={() => {
@@ -99,10 +106,29 @@ const CreatePassword = ({navigation,route}) => {
                   // navigation.navigate('Login');
               }}
             />
-          </View>
+          </View> */}
+          {clicked ?
+          <View style={{width: '90%' }}>
+            <DisableButton
+            title={'Verify'}
+            loader={state.isLoading}
+            bgColor={'#4285F4'}
+          />
+          </View>:
+        <View style={{width: '90%' }}>
+            <ButtonStyle
+            title={'Verify'}
+            bgColor={'#4285F4'}
+            loader={state.isLoading}
+            onPress={() => {
+              loginHandler()
+            }}
+            />
+        </View>
+        }
           </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -110,7 +136,7 @@ export default CreatePassword
 
 const styles = StyleSheet.create({
     crossImage: {
-        marginTop: StatusBar.currentHeight,
+        marginTop: 0,
         marginLeft: 20,
         width: '10%',
         padding: 5,

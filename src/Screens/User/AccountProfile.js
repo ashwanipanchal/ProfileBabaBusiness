@@ -10,9 +10,24 @@ import Loader from '../../services/Loader'
 import { launchImageLibrary } from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import { SafeAreaView } from 'react-native'
-
+import Toast from 'react-native-simple-toast';
+import NetInfo, {useNetInfo} from "@react-native-community/netinfo";
 
 const Account = ({navigation}) => {
+  useEffect(()=>{
+    const unsubscribe = NetInfo.addEventListener(state => {
+      // alert(JSON.stringify(state,null,2))
+      if(!state.isConnected){
+        // Alert.alert('No Connection', 'Please check your internet connection and Try Again')
+        // check()
+      }else{
+        getProfile()
+      }
+    });
+    return (
+      () => unsubscribe()
+    )
+  },[])
   const [editText1, setEditText1] = useState(false)
   const [editText2, setEditText2] = useState(false)
   const [editText3, setEditText3] = useState(false)
@@ -23,6 +38,7 @@ const Account = ({navigation}) => {
   const [updatePassword, setUpdatePassword] = useState('')
   const [userData, setUserData] = useState()
   const [Loading, setLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [data, setData] = useState([
     {
       name: 'Name',
@@ -48,7 +64,7 @@ const Account = ({navigation}) => {
   },[])
 
   const getProfile = async() => {
-    setLoading(true)
+    setProfileLoading(true)
     const user = (await LocalStorage.getUserDetail()||'')
     const token = (await LocalStorage.getToken()||'')
     const newUser = JSON.parse(user)
@@ -63,14 +79,17 @@ const Account = ({navigation}) => {
       }
     })
     const res = await response.json()
+    // console.log(JSON.stringify(res))
+    // alert(JSON.stringify(res,null,2))
     if(res.success){
       setUserData(res.data)
-      setLoading(false)
-      // alert(JSON.stringify(res,null,2))
+      setProfileLoading(false)
     }
   }
 
   const onImageOptionHandler = async(type) => {
+    // navigation.navigate('UploadProfilePicture', {userData: userData})
+    // return
     // const options = {
     //   title: 'Select and Take Profile Picture',
     //   cameraType: 'front',
@@ -98,18 +117,53 @@ const Account = ({navigation}) => {
       })
         if(response){
           console.log("document picker response ==", response)
-          const res=  response.uri.replace('content://', 'file:///data/user/0/')
-         console.log(res)
-          // alert(destPath)
-          setProfileImage(response)
-          // uploadImage()
-        }
-        setTimeout(()=>{
 
-          uploadImage()
-        },3000)
+        //  setLoading(true)
+        // setTimeout(()=>{
+        //   uploadImage()
+        // },3000)
+
+
+        setLoading(true)
+        var formData = new FormData()
+        formData.append('profile_pic',{
+          uri: response.uri,
+          type: response.type,
+          name: response.name,
+        })
+        // alert(JSON.stringify(response,null,2))
+        // return
+        const user = (await LocalStorage.getUserDetail()||'')
+        const newUser = JSON.parse(user)
+        const token = (await LocalStorage.getToken()||'')
+        const btoken = `Bearer ${token}`;
+        // alert(JSON.stringify(btoken,null,2))
+        // return
+        const response1 = await fetch(`${BASE_URL}edit-user-profile/${newUser.id}`,{
+          method:'POST',
+          headers:{
+            "Accept": "application/json",
+            "Content-Type" : "multipart/form-data",
+            "Authorization": btoken,
+          },
+          body: formData
+        })
+        const res = await response1.json()
+        // alert(JSON.stringify(res,null,2))
+        if(res.success){
+          // setLoading(false)
+          getProfile()
+        }else{
+          // setLoading(false)
+          Toast.show("Network Error: Try Again Later")
+        }
+
+        setLoading(false)
+        }
+
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      alert('Network Error: Try Again Later')
     }
   };
 
@@ -151,6 +205,10 @@ const Account = ({navigation}) => {
   }
 
   const updateProfile = async(item) => {
+    if(!item){
+      Toast.show('Please enter your fields')
+      return
+    }
     setLoading(true)
     const user = (await LocalStorage.getUserDetail()||'')
     const newUser = JSON.parse(user)
@@ -174,8 +232,14 @@ const Account = ({navigation}) => {
     })
     const res = await response.json()
     if(res.success){
+      setEditText1(false)
+      setEditText2(false)
+      setEditText4(false)
+      setUpdateName('')
+      setUpdateEmail('')
+      setUpdatePassword('')
       setLoading(false)
-      navigation.replace('AccountProfile')
+      getProfile()
     }
   }
 
@@ -184,12 +248,14 @@ const Account = ({navigation}) => {
       <StatusBar barStyle="dark-content"  backgroundColor="#E5E5E5"/>
       <View style={{ flexDirection: 'row', marginBottom:30 }}>
       <TouchableOpacity onPress={() => {  navigation.goBack()}} style={styles.crossImage}>
-        <Image source={require('../../images/Add.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
+        <Image source={require('../../images/arrowback.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
       </TouchableOpacity>
       <Image source={require('../../images/youraccount.png')} style={{ marginTop: 0, marginLeft: 10, width: 150, height: 40,  resizeMode: 'contain' }} />
       </View>
-      <Loader status={Loading}/>
-      <ScrollView>
+      <Loader status={profileLoading}/>
+      <ScrollView
+        keyboardShouldPersistTaps='handled'
+      >
         {(userData && 
         <View style={{marginHorizontal:20}}>
           <ImageBackground imageStyle={{resizeMode:'contain', borderRadius:20}} style={{width:'100%', height:330, resizeMode:'contain', marginHorizontal:2, alignSelf:'center', marginBottom:10,}} source={ userData.profile_pic.length > 0 ? {uri: `http://testing.profilebaba.com/uploads/users/${userData.profile_pic}`} : require('../../images/default-user-image.png')}>
@@ -235,6 +301,7 @@ const Account = ({navigation}) => {
                   <ButtonStyle
                     onPress={()=> updateProfile(updateName)}
                     title={'Update'}
+                    loader={Loading}
                     borderRadius={10}
                   />
               </View>   
@@ -266,6 +333,7 @@ const Account = ({navigation}) => {
                   <ButtonStyle
                     onPress={()=> updateProfile(updateEmail)}
                     title={'Update'}
+                    loader={Loading}
                     borderRadius={10}
                   />
               </View>   
@@ -299,6 +367,7 @@ const Account = ({navigation}) => {
                   <ButtonStyle
                     onPress={()=> updateProfile(updatePassword)}
                     title={'Update'}
+                    loader={Loading}
                     borderRadius={10}
                   />
               </View>   
@@ -319,7 +388,7 @@ const styles = StyleSheet.create({
         marginLeft: 20,
         width: '10%',
         padding: 5,
-        backgroundColor:'#fff',
+        // backgroundColor:'#fff',
         borderRadius:10
       },
       textInput: {

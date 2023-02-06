@@ -1,7 +1,7 @@
 // const webClientId =
 //   '207538176069-cgih256ia35b2jlbcm1ta837l79ka22s.apps.googleusercontent.com';
 
-export const BASE_URL = 'http://testing.profilebaba.com/api/';
+export const BASE_URL = 'https://profilebaba.com/api/';
 // export const SOCKET_URL = 'http://143.110.188.183:4500';
 
 // export const GOOGLE_MAPS_APIKEY = 'AIzaSyA_23OZbQeEKQeLfMBTJ6xd3-hCa33tK4A';

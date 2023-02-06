@@ -9,23 +9,44 @@ import { LocalStorage } from '../../services/Api'
 import Loader from '../../services/Loader'
 import moment from 'moment/moment'
 import { FloatingAction } from 'react-native-floating-action'
-
-
+import { ActivityIndicator } from 'react-native'
+import { useFocusEffect } from '@react-navigation/native';
+import NetInfo, {useNetInfo} from "@react-native-community/netinfo";
 const Account = ({navigation}) => {
+  useEffect(()=>{
+    const unsubscribe = NetInfo.addEventListener(state => {
+      // alert(JSON.stringify(state,null,2))
+      if(!state.isConnected){
+        // Alert.alert('No Connection', 'Please check your internet connection and Try Again')
+        // check()
+      }else{
+        getPlanHistory()
+        getNotification()
+      }
+    });
+    return (
+      () => unsubscribe()
+    )
+  },[])
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState()
   const [transaction, setTransaction] = useState([])
+  const [notificationCount, setNotificationCount] = useState();
   useLayoutEffect(()=>{
     getPlanHistory()
   },[])
-  
+
+  useFocusEffect(()=>{
+    getNotification()
+  },[getNotification])
+
   const getPlanHistory = async() => {
     setLoading(true)
     const token = (await LocalStorage.getToken() || '')
     const user = (await LocalStorage.getUserDetail() || '')
     const newUser = JSON.parse(user)
     const btoken = `Bearer ${token}`;
-    const response = await fetch(`${BASE_URL}vendor-history/5331`, {
+    const response = await fetch(`${BASE_URL}vendor-history/${newUser.id}`, {
       method: 'GET',
       headers: {
         "Accept": "application/json",
@@ -35,12 +56,36 @@ const Account = ({navigation}) => {
     })
     const res = await response.json()
     console.log(JSON.stringify(res))
-    alert(JSON.stringify(res,null,2))
+    // alert(JSON.stringify(res,null,2))
     // return
     // return
     setData(res.data)
     // setTransaction(res.data.transaction.plans)
     setLoading(false)
+  }
+
+  const getNotification = async () => {
+    const user = (await LocalStorage.getUserDetail() || '')
+    const token = (await LocalStorage.getToken() || '')
+    const newUser = JSON.parse(user)
+
+    // alert(JSON.stringify(user,null,2))
+    const btoken = `Bearer ${token}`;
+    const response = await fetch(`${BASE_URL}notification/${newUser.id}`, {
+      // const response = await fetch(`${BASE_URL}get-chat-history/2`, {
+      method: 'GET',
+      headers: {
+        "Accept": "application/json",
+        'Content-Type': 'application/json',
+        "Authorization": btoken,
+      }
+    })
+    const res = await response.json()
+    // alert(JSON.stringify(res,null,2))
+    const {success} = res;
+    if(success){
+      setNotificationCount(res.data.count)
+    }
   }
   const actions = [
     {
@@ -57,47 +102,65 @@ const Account = ({navigation}) => {
     },
   ];
 
+  if(loading) {
+    return <View style={{flex: 1, alignContent: 'center', justifyContent: 'center'}}>
+      <ActivityIndicator size={'large'} color={COLORS.orange}/>
+    </View>
+  }
+
+  // alert(JSON.stringify(data,null,2))
+  // return
+  // alert(JSON.stringify(typeof data.active_plan))
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
     <StatusBar barStyle="dark-content"  backgroundColor="#F5F5F5"/>
-    <Loader status={loading}/>
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 0, alignItems: 'center', }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, alignItems: 'center', marginBottom: 10 }}>
         <TouchableOpacity onPress={() => {
-            navigation.openDrawer()
+          navigation.openDrawer()
         }} style={styles.crossImage}>
-            <Image source={require('../../images/homemenu.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
+          <Image source={require('../../images/homemenu.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
         </TouchableOpacity>
         <Image source={require('../../images/homelogo.png')} style={{ width: 129, height: 40, resizeMode: 'contain' }} />
-        <TouchableOpacity onPress={() => { navigation.navigate('Notification') }} style={styles.crossImage}>
+        <View style={styles.crossImage}>
+          <TouchableOpacity activeOpacity={0.8} onPress={() => { navigation.navigate('Notification') }} >
             <Image source={require('../../images/homebell.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
-        </TouchableOpacity>
-    </View>
+          </TouchableOpacity>
+          {notificationCount > 0 &&
+            // <Text style={{ color: 'white', position: 'absolute', top: -2, right: 1, backgroundColor: 'red', borderRadius: 70, paddingHorizontal: 5, elevation:8 }}>{notificationCount}</Text>
+            <View style={{ position: 'absolute', top: -10, right: -2, backgroundColor: 'red', borderRadius: 50, paddingHorizontal: 3, paddingVertical: 2, }}>
+
+              <Text style={{ color: 'white', elevation: 8, fontSize: 10, textAlign: 'center' }}>{notificationCount}</Text>
+            </View>
+          }
+        </View>
+      </View>
+        {/* <Loader status={loading}/> */}
     <ScrollView>
       {data &&
-          <View style={{backgroundColor:'#FFF', marginTop:20, paddingVertical:20,paddingHorizontal:12}}>
+          <View style={{backgroundColor:'#FFF', paddingVertical:20,paddingHorizontal:12}}>
           <View style={{flexDirection:'row', justifyContent:'space-between'}}>
             <Text style={{color:COLORS.orange, fontSize:16}}>Plan</Text>
-            {data.active_plan ? <Text style={{color:COLORS.lightBlack}}>{data.active_plan.plans.title}</Text>:<Text style={{color:COLORS.lightBlack}}>{'No Plan Active'}</Text>}
+            {Array.isArray(data.active_plan) ? <Text style={{color:COLORS.lightBlack}}>{'No Plan Active'}</Text>:<Text style={{color:COLORS.lightBlack}}>{data.active_plan.plans.plan.title}</Text>}
           </View>
           <View style={{flexDirection:'row', justifyContent:'space-between', marginTop:5}}>
             <Text style={{color:COLORS.lightBlack}}>Pending</Text>
-            <Text style={{color:COLORS.lightGray}}>{data.leads.pending}</Text>
+            <Text style={{color:COLORS.lightGray }}>{data.leads.pending}</Text>
           </View>
           <View style={{flexDirection:'row', justifyContent:'space-between', marginTop:5}}>
             <Text style={{color:COLORS.lightBlack}}>Usage</Text>
             <Text style={{color:COLORS.lightGray}}>{data.leads.total - data.leads.pending}</Text>
           </View>
         </View>}
-      <Text style={{color:'#1899FE', marginVertical:20, marginLeft:14, fontSize:20}}>Transaction History</Text>
-      {/* {'transaction' in data &&
+      <Text style={{color:'#1899FE', marginVertical:10, marginLeft:10, fontSize:18}}>Transaction History</Text>
+      {data && data.transaction &&
         <FlatList
         data={data.transaction}
         renderItem={({item})=> (
-          <View style={{ backgroundColor: '#FFF', marginTop: 10, paddingVertical: 20, paddingHorizontal: 12 }}>
+          <View style={{ backgroundColor: '#FFF', paddingVertical: 20, paddingHorizontal: 12 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ color: COLORS.orange, fontSize: 16 }}>Plan</Text>
-              <Text style={{ color: COLORS.lightBlack }}>{item.title}</Text>
+              <Text style={{ color: COLORS.lightBlack }}>{item.plan.title}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
               <Text style={{ color: COLORS.lightBlack }}>Start Date</Text>
@@ -110,7 +173,7 @@ const Account = ({navigation}) => {
           </View>
         )}
       /> 
-      } */}
+      }
     </ScrollView>
     <FloatingAction
         color={COLORS.blue}
@@ -123,7 +186,9 @@ const Account = ({navigation}) => {
         onPressItem={name => {
           if(name == 'message'){
             navigation.navigate("AdminChat")
-        }
+        }else{
+          navigation.navigate('ExecutivesNumber')
+      }
         }}
     />
 </SafeAreaView>
@@ -139,7 +204,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
     width: '10%',
     padding: 5,
-    backgroundColor: '#FFF',
+    // backgroundColor: '#FFF',
     borderRadius: 10
   },
       textInput: {

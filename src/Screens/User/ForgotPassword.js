@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, StatusBar, ScrollView, TextInput, Keyboard } from 'react-native'
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Image, StatusBar, ScrollView, TextInput, Keyboard } from 'react-native'
 import React, { useState } from 'react'
 import { StatusBarDark } from '../../Custom/CustomStatusBar'
-import { ButtonStyle, LoginButton } from '../../Custom/CustomView'
+import { ButtonStyle, DisableButton, LoginButton } from '../../Custom/CustomView'
 import Toast from 'react-native-simple-toast';
 import { Api } from '../../services/Api';
 
 const ForgotPassword = ({navigation}) => {
+  const [clicked, setClicked] = useState(false)
   const [state, setState] = useState({
     contact_number: '',
     isLoading: false
@@ -26,7 +27,8 @@ const ForgotPassword = ({navigation}) => {
       Toast.show('Mobile number must be in 10 digits');
       return;
     }
-
+    setClicked(true)
+    setState({ ...state, isLoading: true })
     const body= {
       contact_number
     }
@@ -36,18 +38,25 @@ const ForgotPassword = ({navigation}) => {
     if(success){
       alert(data.otp)
       navigation.navigate('VerifyOTPForgotPassword',data);
+      setClicked(false)
+      setState({ ...state, isLoading: false });
     }else{
       Toast.show("No user found");
+      setClicked(false)
+      setState({ ...state, isLoading: false });
     }
   }
 
   return (
-    <View style={{flex:1, backgroundColor:'#fff'}}>
-      <StatusBarDark/>
+    <SafeAreaView style={{flex:1, backgroundColor:'#fff'}}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <TouchableOpacity onPress={() => { navigation.goBack() }} style={styles.crossImage}>
         <Image source={require('../../images/Add.png')} style={{ width: 30, height: 30, resizeMode: 'contain' }} />
       </TouchableOpacity>
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1}}
+        keyboardShouldPersistTaps='handled'
+      >
       <View>
           <View style={{ flexDirection: 'row', marginTop: 40 }}>
             <Text style={{ color: '#4285F4', fontFamily: 'Poppins-SemiBold', fontSize: 28, marginLeft: 30, fontWeight: '600' }}>Forgot </Text>
@@ -68,19 +77,30 @@ const ForgotPassword = ({navigation}) => {
           />
           </View>
           <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', height: 170, marginTop: 30 }}>
-          <View style={{ width: '90%',  }}>
+          {clicked ? 
+              <View style={{ width: '90%',  }}>
+              <DisableButton
+                title={'Done'}
+                loader={state.isLoading}
+                bgColor={'#4285F4'}
+
+              />
+            </View>:
+            <View style={{ width: '90%',  }}>
             <ButtonStyle
               title={'Done'}
               bgColor={'#4285F4'}
+              loader={state.isLoading}
               onPress={() => {
                 forgotHandler()
                   // navigation.navigate('VerifyOTPForgotPassword');
               }}
             />
           </View>
+            }
           </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -88,7 +108,7 @@ export default ForgotPassword
 
 const styles = StyleSheet.create({
     crossImage: {
-        marginTop: StatusBar.currentHeight,
+        marginTop: 0,
         marginLeft: 20,
         width: '10%',
         padding: 5,
